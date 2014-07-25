@@ -28,7 +28,7 @@
 	
 	<cfloop list="#Arguments.Permissions#" index="permission">
 		<cfif Len(Trim(permission))>
-			<cfset permissionid = Variables.Permissions.savePermission(PermissionName=permission)>
+			<cfset permissionid = Variables.Permissions.savePermission(PermissionName=permission,OnExists="update")>
 			<!--- Any user responsible for adding a permission should get that permission --->
 			<cfif NOT ListFindNoCase(PermissionList,permissionid)>
 				<cfset NewPermissionIDs = ListAppend(NewPermissionIDs,permissionid)>
@@ -156,7 +156,7 @@
 	</cfif>
 	
 	<!--- Check for admin --->
-	<cfset qLogin = variables.Users.getUsers(username=arguments.username,password=arguments.password,fieldlist=fields,isApproved=true)>
+	<cfset qLogin = variables.Users.getUsers(username=arguments.username,password=arguments.password,fieldlist=fields)>
 	
 	<!--- If user is admin --->
 	<cfif qLogin.RecordCount>
@@ -340,6 +340,7 @@
 <cffunction name="upgrade" access="private" returntype="void" output="no">
 	
 	<cfset upgradeApproved()>
+	<cfset upgradeJoinTable()>
 	
 </cffunction>
 
@@ -351,6 +352,45 @@
 		<cfset sData = StructNew()>
 		<cfset sData["DateApproved"] = now()>
 		<cfset Variables.DataMgr.updateRecords(tablename=Variables.Users.getTableVariable(),data_set=sData)>
+	</cfif>
+	
+</cffunction>
+
+<cffunction name="upgradeJoinTable" access="private" returntype="void" output="no">
+	
+	<cfif
+			Len(Variables.DataMgr.getDatasource())
+		AND	Variables.DataMgr.hasTable("#variables.prefix#Users2Permissions")
+	>
+		<!--- Make sure new table has all data from old table --->
+		<cfquery datasource="#Variables.DataMgr.getDatasource()#">
+		INSERT INTO #variables.prefix#Permissions2Users (
+				UserID,
+				PermissionID
+		)
+		SELECT	UserID,
+				PermissionID
+		FROM	#variables.prefix#Users2Permissions u2p
+		WHERE	NOT EXISTS (
+					SELECT	1
+					FROM	#variables.prefix#Permissions2Users p2u
+					WHERE	p2u.UserID = u2p.UserID
+						AND	p2u.PermissionID = u2p.PermissionID
+				)
+		</cfquery>
+		<!--- Remove data from old table --->
+		<cfquery datasource="#Variables.DataMgr.getDatasource()#">
+		DELETE
+		FROM	#variables.prefix#Users2Permissions
+		</cfquery>
+		<!--- Try to remove old table (no big deal if it sticks around though) --->
+		<cftry>
+			<cfquery datasource="#Variables.DataMgr.getDatasource()#">
+			DROP TABLE #variables.prefix#Users2Permissions
+			</cfquery>
+		<cfcatch>
+		</cfcatch>
+		</cftry>
 	</cfif>
 	
 </cffunction>

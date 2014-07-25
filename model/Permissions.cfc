@@ -30,4 +30,21 @@
 	
 </cffunction>
 
+<cffunction name="hasPermission" access="public" returntype="boolean">
+	<cfargument name="PermissionList" type="string" required="yes">
+	<cfargument name="UserPermissions" type="string" required="yes">
+	
+	<cfset var permitted = false>
+	<cfset var UserPermission = "">
+
+	<cfloop list="#arguments.UserPermissions#" index="UserPermission">
+		<cfif ListFindNoCase(arguments.PermissionList,UserPermission)>
+			<cfset permitted = true>
+			<cfbreak>
+		</cfif>
+	</cfloop>
+	
+	<cfreturn permitted>
+</cffunction>
+
 </cfcomponent>

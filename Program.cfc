@@ -1,6 +1,11 @@
 <cfcomponent output="false" security_permissions="Users">
 
 <cffunction name="config" access="public" returntype="void" output="no">
+	<cftry>
+		<cfset Config.paramSetting("SessionScope","Session")>
+	<cfcatch>
+	</cfcatch>
+	</cftry>
 	<cfif
 			StructKeyExists(Application,"Security")
 		AND	StructKeyExists(Application.Security,"checkBasicPageAccess")

@@ -6,7 +6,7 @@
 </cfif>
 
 <cfif hasPermissionsPermission>
-	<p>The "Permissions" permission gives a user the abilility to change their permission or that of anyone else. It is effectively the skeleton key.</p>	
+	<p>The "Permissions" permission gives a user the ability to change their permission or that of anyone else. It is effectively the skeleton key.</p>	
 </cfif>
 
 <cf_sebForm>

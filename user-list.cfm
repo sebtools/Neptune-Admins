@@ -11,7 +11,7 @@
 <cf_sebTable>
 	<cf_sebColumn dbfield="LastNameFirst">
 	<cf_sebColumn dbfield="username">
-	<cf_sebColumn type="submit" show="!isApproved" label="Approve" CFC_Method="approveUser">
+	<!--- <cf_sebColumn type="submit" show="!isApproved" label="Approve" CFC_Method="approveUser"> --->
 </cf_sebTable>
 
 </cf_Template>
