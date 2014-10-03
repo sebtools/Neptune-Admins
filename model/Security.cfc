@@ -142,21 +142,32 @@
 	<cfargument name="username" type="string" required="yes">
 	<cfargument name="password" type="string" required="yes">
 	<cfargument name="ShowWhyFail" type="boolean" default="false" hint="Should we tell why the login failed (username or password)?">
+	<cfargument name="IPAddress" type="string" default="#CGI.REMOTE_ADDR#">
+	<cfargument name="UserAgent" type="string" default="#CGI.HTTP_USER_AGENT#">
 
 	<cfset var errMessage = "">
 	<cfset var qLogin = 0>
 	<cfset var fields = "UserID,FirstName,LastName,FullName,isUniversal,Permissions,PermissionNames">
 	<cfset var LoginTime = now()>
+	<cfset var sAttempt = StructNew()>
 	
+	<cfset sAttempt.username = arguments.username>
+	<cfset sAttempt.IPAddress = Arguments.IPAddress>
+	<cfset sAttempt.BrowserString = Arguments.UserAgent>
+	<cfset sAttempt.isSuccessful  = false>
+
 	<!--- Logout --->
 	<cfset logout()>
 	
 	<cfif NOT ( Len(arguments.username) AND Len(arguments.password) )>
+		<cfset Variables.DataMgr.insertRecord(tablename='secUserLoginAttempts',data=sAttempt,OnExists="insert")>
 		<cfthrow message="username and password are required" type="LoginErr" errorcode="LoginErr">
 	</cfif>
 	
 	<!--- Check for admin --->
 	<cfset qLogin = variables.Users.getUsers(username=arguments.username,password=arguments.password,fieldlist=fields)>
+
+	<cfset sAttempt.UserID = qLogin.UserID>
 	
 	<!--- If user is admin --->
 	<cfif qLogin.RecordCount>
@@ -171,11 +182,16 @@
 		<cfset variables.SessionMgr.setValue("lastpageview",LoginTime)>
 		
 		<cfset variables.Users.saveRecord(UserID=qLogin.UserID,LastLogin=LoginTime)>
-	
+		
+		<cfset sAttempt.isSuccessful  = true>
+		<cfset Variables.DataMgr.insertRecord(tablename='secUserLoginAttempts',data=sAttempt,OnExists="insert")>
 	<cfelse>
+		<cfif variables.Users.hasUsers(username=arguments.username)>
+			<cfset sAttempt.UserID = Variables.Users.getPrimaryKeyValues(username=arguments.username)>
+		</cfif>
 		<cfif arguments.ShowWhyFail>
 			<!--- If login pwd creds didnt match --->
-			<cfif variables.Users.hasUsers(username=arguments.username)>
+			<cfif StructKeyExists(sAttempt,"UserID") AND Val(sAttempt.UserID)>
 				<cfset errMessage = "Invalid Password">
 			<cfelse>
 				<cfset errMessage = "Invalid Username">
@@ -183,6 +199,7 @@
 		<cfelse>
 			<cfset errMessage = "Credentials Not found">
 		</cfif>
+		<cfset Variables.DataMgr.insertRecord(tablename='secUserLoginAttempts',data=sAttempt,OnExists="insert")>
 		<cfthrow message="#errMessage#" type="LoginErr" errorcode="LoginErr">
 	</cfif>
 	
@@ -422,6 +439,15 @@
 		</data>
 	</table>
 	<table entity="Permission" universal="true" Specials="Sorter" permissions="Permissions" />
+	<table name="secUserLoginAttempts">
+		<field ColumnName="LoginAttemptID" CF_DataType="CF_SQL_INTEGER" PrimaryKey="true" Increment="true" />
+		<field ColumnName="UserID" CF_DataType="CF_SQL_INTEGER" />
+		<field ColumnName="username" CF_DataType="CF_SQL_VARCHAR" Length="50" />
+		<field ColumnName="DateCreated" CF_DataType="CF_SQL_DATE" Special="CreationDate" />
+		<field ColumnName="IPAddress" CF_DataType="CF_SQL_VARCHAR" Length="20" />
+		<field ColumnName="BrowserString" CF_DataType="CF_SQL_VARCHAR" Length="255" />
+		<field ColumnName="isSuccessful" CF_DataType="CF_SQL_BIT" Default="0" />
+	</table>
 </tables>
 </cffunction>
 
