@@ -440,13 +440,13 @@
 	</table>
 	<table entity="Permission" universal="true" Specials="Sorter" permissions="Permissions" />
 	<table name="secUserLoginAttempts">
-		<field ColumnName="LoginAttemptID" CF_DataType="CF_SQL_INTEGER" PrimaryKey="true" Increment="true" />
-		<field ColumnName="UserID" CF_DataType="CF_SQL_INTEGER" />
-		<field ColumnName="username" CF_DataType="CF_SQL_VARCHAR" Length="50" />
-		<field ColumnName="DateCreated" CF_DataType="CF_SQL_DATE" Special="CreationDate" />
-		<field ColumnName="IPAddress" CF_DataType="CF_SQL_VARCHAR" Length="20" />
-		<field ColumnName="BrowserString" CF_DataType="CF_SQL_VARCHAR" Length="255" />
-		<field ColumnName="isSuccessful" CF_DataType="CF_SQL_BIT" Default="0" />
+		<field name="LoginAttemptID" type="pk:integer" />
+		<field name="UserID" type="integer" />
+		<field name="username" type="text" Length="50" />
+		<field name="DateCreated" type="CreationDate" />
+		<field name="IPAddress" type="text" Length="20" />
+		<field name="BrowserString" type="text" Length="255" />
+		<field name="isSuccessful" type="boolean" Default="0" />
 	</table>
 </tables>
 </cffunction>
